@@ -2,15 +2,22 @@
 
 namespace Apps\Tms\Components\System\Tools\Lt;
 
+use Apps\Tms\Packages\Adminltetags\Traits\DynamicTable;
+use Apps\Tms\Packages\System\Tools\Lt\SystemToolsLt;
+use Apps\Tms\Packages\System\Tools\Uom\SystemToolsUom;
 use System\Base\BaseComponent;
 
 class LtComponent extends BaseComponent
 {
-    protected $package;
+    use DynamicTable;
+
+    protected $ltPackage;
 
     public function initialize()
     {
-        //$this->package = $this->usePackage(?::class);
+        $this->ltPackage = $this->usePackage(SystemToolsLt::class);
+
+        $this->uomPackage = $this->usePackage(SystemToolsUom::class);
     }
 
     /**
@@ -18,7 +25,59 @@ class LtComponent extends BaseComponent
      */
     public function viewAction()
     {
-        return;
+        $this->view->uoms = $uoms = $this->uomPackage->getAll()->systemtoolsuom;
+
+        if (isset($this->getData()['id'])) {
+            if ($this->getData()['id'] != 0) {
+                $lt = $this->ltPackage->getById((int) $this->getData()['id']);
+
+                if (!$lt) {
+                    return $this->throwIdNotFound();
+                }
+
+                $this->view->lt = $lt;
+            }
+
+            $this->view->pick('lt/view');
+
+            return;
+        }
+
+        $controlActions =
+            [
+                'actionsToEnable'       =>
+                [
+                    'edit'      => 'system/tools/lt'
+                ]
+            ];
+
+        $replaceColumns =
+            function ($dataArr) use ($uoms) {
+                if ($dataArr && is_array($dataArr) && count($dataArr) > 0) {
+                    foreach ($dataArr as &$data) {
+                        if (isset($uoms[$data['uom']]['name'])) {
+                            $data['uom'] = $uoms[$data['uom']]['name'];
+                        }
+                    }
+                }
+
+                return $dataArr;
+            };
+
+        $this->generateDTContent(
+            $this->ltPackage,
+            'system/tools/lt/view',
+            null,
+            ['name','capacity','uom'],
+            true,
+            ['name','capacity','uom'],
+            $controlActions,
+            [],
+            $replaceColumns,
+            'name'
+        );
+
+        $this->view->pick('lt/list');
     }
 
     /**
@@ -28,11 +87,11 @@ class LtComponent extends BaseComponent
     {
         $this->requestIsPost();
 
-        //$this->package->add{?}($this->postData());
+        $this->ltPackage->addLt($this->postData());
 
         $this->addResponse(
-            $this->package->packagesData->responseMessage,
-            $this->package->packagesData->responseCode
+            $this->ltPackage->packagesData->responseMessage,
+            $this->ltPackage->packagesData->responseCode
         );
     }
 
@@ -43,11 +102,11 @@ class LtComponent extends BaseComponent
     {
         $this->requestIsPost();
 
-        //$this->package->update{?}($this->postData());
+        $this->ltPackage->updateLt($this->postData());
 
         $this->addResponse(
-            $this->package->packagesData->responseMessage,
-            $this->package->packagesData->responseCode
+            $this->ltPackage->packagesData->responseMessage,
+            $this->ltPackage->packagesData->responseCode
         );
     }
 
@@ -58,11 +117,11 @@ class LtComponent extends BaseComponent
     {
         $this->requestIsPost();
 
-        //$this->package->remove{?}($this->postData());
+        $this->ltPackage->removeLt($this->postData());
 
         $this->addResponse(
-            $this->package->packagesData->responseMessage,
-            $this->package->packagesData->responseCode
+            $this->ltPackage->packagesData->responseMessage,
+            $this->ltPackage->packagesData->responseCode
         );
     }
 }

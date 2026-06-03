@@ -22,7 +22,14 @@
 			"version" : "0.0.0",
 			"repo" : "https://github.com/sp-tms/tms"
 		},
-		"packages" : [],
+		"packages" : 
+		[
+			{
+				"name" : "SystemToolsLt",
+				"version" : "0.0.0",
+				"repo" : "https://github.com/sp-tms/tms-packages-tools-systemtoolslt"
+			}
+		],
 		"middlewares" : [],
 		"views" : [],
 		"externals" : 
